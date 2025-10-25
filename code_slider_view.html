@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 24.8.1.2 (Linux)"/>
+	<meta name="created" content="00:00:00"/>
+	<meta name="changed" content="00:00:00"/>
+	<style type="text/css">
+		@page { size: 8.27in 11.69in; margin: 0.79in }
+		p { line-height: 115%; margin-bottom: 0.1in; background: transparent }
+		pre { background: transparent }
+		pre.western { font-family: "Liberation Mono", monospace; font-size: 10pt }
+		pre.cjk { font-family: "NSimSun", monospace; font-size: 10pt }
+		pre.ctl { font-family: "Liberation Mono", monospace; font-size: 10pt }
+	</style>
+</head>
+<body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><pre class="western">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;CT Sagittal Viewer&lt;/title&gt;
+  &lt;script src=&quot;https://cdn.plot.ly/plotly-latest.min.js&quot;&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #slider-container { width: 500px; margin: 20px auto; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;CT Sagittal Viewer&lt;/h2&gt;
+  &lt;div id=&quot;plot&quot; style=&quot;width:500px;height:500px;&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;slider-container&quot;&gt;
+    &lt;input type=&quot;range&quot; id=&quot;sliceSlider&quot; min=&quot;35&quot; max=&quot;135&quot; value=&quot;35&quot;&gt;
+    &lt;p&gt;Slice: &lt;span id=&quot;sliceNumber&quot;&gt;35&lt;/span&gt;&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    // --- Configuration ---
+    const startSlice = 35;
+    const endSlice = 134;
+
+    // Add annotations here (slice_number: [x, y, w, h, label])
+    const annotationsDict = {
+      84: [{x:94, y:13, w:12, h:12, label:&quot;Bladder&quot;}],
+      86: [{x:107, y:31, w:10, h:14, label:&quot;Sigmoid Colon&quot;}],
+      87: [{x:115, y:18, w:12, h:16, label:&quot;Rectum&quot;}],
+      94: [{x:95, y:12, w:20, h:15, label:&quot;Vagina&quot;}],
+      82: [{x:104, y:26, w:5, h:5, label:&quot;Cervix&quot;}],
+      91: [{x:93, y:24, w:18, h:18, label:&quot;Uterus&quot;}]
+    };
+
+    // --- Preload images ---
+    let images = [];
+    for (let i=startSlice; i&lt;=endSlice; i++){
+      let img = new Image();
+      img.src = `slice_${i}.png`; // PNGs are in the same folder
+      images.push(img);
+    }
+
+    const plotDiv = document.getElementById('plot');
+
+    function updateSlice(sliceNumber){
+      const sliceIndex = sliceNumber - startSlice;
+      const img = images[sliceIndex];
+
+      // Build shapes and annotations
+      let shapes = [];
+      let layoutAnnotations = [];
+      if (annotationsDict[sliceNumber]){
+        annotationsDict[sliceNumber].forEach(obj=&gt;{
+          shapes.push({
+            type: 'rect',
+            x0: obj.x, y0: obj.y,
+            x1: obj.x + obj.w, y1: obj.y + obj.h,
+            line: {color: 'red', width: 2}
+          });
+          layoutAnnotations.push({
+            x: obj.x + obj.w + 2,
+            y: obj.y + obj.h/2,
+            text: obj.label,
+            showarrow: false,
+            font: {color:'red', size:12}
+          });
+        });
+      }
+
+      const data = [{
+        type: 'image',
+        source: img.src,
+        x: [0], y: [0],
+        xaxis: 'x', yaxis: 'y'
+      }];
+
+      Plotly.react(plotDiv, data, {
+        xaxis: {visible:false, range:[0, img.width]},
+        yaxis: {visible:false, range:[0, img.height], scaleanchor:&quot;x&quot;},
+        shapes: shapes,
+        annotations: layoutAnnotations,
+        margin: {t:0, b:0, l:0, r:0}
+      });
+    }
+
+    // Initial slice
+    updateSlice(startSlice);
+
+    // Slider interaction
+    const slider = document.getElementById('sliceSlider');
+    const sliceLabel = document.getElementById('sliceNumber');
+    slider.addEventListener('input', function(){
+      const sliceNumber = parseInt(this.value);
+      sliceLabel.textContent = sliceNumber;
+      updateSlice(sliceNumber);
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</body>
+</html>
